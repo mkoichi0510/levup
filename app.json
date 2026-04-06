@@ -2,6 +2,7 @@
   "expo": {
     "name": "Levup",
     "slug": "levup",
+    "scheme": "levup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.machida.levup"
+      "bundleIdentifier": "com.machida.levup",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +30,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "14e24230-be68-440d-bda0-b1d78bc1b89a"
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
