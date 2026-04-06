@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 } from "react-native";
 import { StreakCounter } from "../src/components/StreakCounter";
 import { fetchCategories, fetchDailyResult, fetchStreak } from "../src/api/client";
+import { getTodayKey } from "../src/lib/date";
 
 type HomeData = {
   streak: number;
@@ -18,16 +20,6 @@ type HomeData = {
   totalXp: number;
   hasCategories: boolean;
 };
-
-function getTodayKey(): string {
-  const now = new Date();
-  // JST (UTC+9)
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  const y = jst.getUTCFullYear();
-  const m = String(jst.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(jst.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
 
 export default function HomeScreen() {
   const [data, setData] = useState<HomeData | null>(null);
@@ -39,12 +31,18 @@ export default function HomeScreen() {
       try {
         const todayKey = getTodayKey();
         const [streakRes, categoriesRes, dailyRes] = await Promise.all([
-          fetchStreak().catch(() => ({ streak: 0, playedToday: false })),
-          fetchCategories().catch(() => ({ categories: [] })),
-          fetchDailyResult(todayKey).catch(() => ({
-            dailyResult: { status: "pending" },
-            categoryResults: [],
-          })),
+          fetchStreak().catch((e) => {
+            console.warn("[HomeScreen] fetchStreak failed:", e);
+            return { streak: 0, playedToday: false };
+          }),
+          fetchCategories().catch((e) => {
+            console.warn("[HomeScreen] fetchCategories failed:", e);
+            return { categories: [] };
+          }),
+          fetchDailyResult(todayKey).catch((e) => {
+            console.warn("[HomeScreen] fetchDailyResult failed:", e);
+            return { dailyResult: { status: "pending" }, categoryResults: [] };
+          }),
         ]);
 
         const totalPlays = dailyRes.categoryResults.reduce(
@@ -102,7 +100,14 @@ export default function HomeScreen() {
         <Text style={styles.heading}>今日の進捗</Text>
 
         {/* プライマリCTA */}
-        <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.ctaButton}
+          activeOpacity={0.85}
+          onPress={() => {
+            console.log("[HomeScreen] CTA tapped — /play screen not yet implemented");
+            Alert.alert("準備中", "プレイ記録画面は近日公開予定です");
+          }}
+        >
           <Text style={styles.ctaText}>🎮　プレイを記録する</Text>
         </TouchableOpacity>
 
