@@ -1,12 +1,6 @@
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+import { apiBaseUrl } from "../config/env";
 
-if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
-  console.warn(
-    "[api/client] EXPO_PUBLIC_API_BASE_URL is not set. " +
-      "Falling back to localhost:3000 — this will fail on a physical device."
-  );
-}
+const BASE_URL = apiBaseUrl;
 
 export type StreakResponse = {
   streak: number;
