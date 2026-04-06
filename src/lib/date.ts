@@ -1,7 +1,9 @@
+// 日本標準時（JST = UTC+9）はDSTなし
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
 export function getTodayKey(): string {
   const now = new Date();
-  // JST (UTC+9)
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const jst = new Date(now.getTime() + JST_OFFSET_MS);
   const y = jst.getUTCFullYear();
   const m = String(jst.getUTCMonth() + 1).padStart(2, "0");
   const d = String(jst.getUTCDate()).padStart(2, "0");

@@ -15,8 +15,7 @@ describe("api/client", () => {
       const result = await fetchStreak();
       expect(result).toEqual({ streak: 5, playedToday: true });
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/streak"),
-        expect.any(Object)
+        expect.stringContaining("/api/streak")
       );
     });
 
@@ -47,8 +46,7 @@ describe("api/client", () => {
 
       await fetchCategories();
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/categories?visible=true"),
-        expect.any(Object)
+        expect.stringContaining("/api/categories?visible=true")
       );
     });
   });
@@ -65,8 +63,7 @@ describe("api/client", () => {
 
       await fetchDailyResult("2025-04-01");
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/results/2025-04-01"),
-        expect.any(Object)
+        expect.stringContaining("/api/results/2025-04-01")
       );
     });
 

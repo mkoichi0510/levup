@@ -1,32 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { StreakCounter } from "../src/components/StreakCounter";
 import { fetchCategories, fetchDailyResult, fetchStreak } from "../src/api/client";
 import { getTodayKey } from "../src/lib/date";
-
-type HomeData = {
-  streak: number;
-  playedToday: boolean;
-  totalPlays: number;
-  totalXp: number;
-  hasCategories: boolean;
-};
+import { aggregateDailyStats } from "../src/lib/aggregate";
+import type { HomeData } from "../src/types/home";
 
 export default function HomeScreen() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
+
     async function load() {
       try {
         const todayKey = getTodayKey();
@@ -45,35 +42,44 @@ export default function HomeScreen() {
           }),
         ]);
 
-        const totalPlays = dailyRes.categoryResults.reduce(
-          (sum, r) => sum + r.playCount,
-          0
-        );
-        const totalXp = dailyRes.categoryResults.reduce(
-          (sum, r) => sum + r.xpEarned,
-          0
+        const { totalPlays, totalXp } = aggregateDailyStats(
+          dailyRes.categoryResults
         );
 
-        setData({
-          streak: streakRes.streak,
-          playedToday: streakRes.playedToday,
-          totalPlays,
-          totalXp,
-          hasCategories: categoriesRes.categories.length > 0,
-        });
+        if (isMounted.current) {
+          setData({
+            streak: streakRes.streak,
+            playedToday: streakRes.playedToday,
+            totalPlays,
+            totalXp,
+            hasCategories: categoriesRes.categories.length > 0,
+          });
+        }
       } catch (e) {
-        setError("データの読み込みに失敗しました");
+        if (isMounted.current) {
+          setError("データの読み込みに失敗しました");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted.current) {
+          setLoading(false);
+        }
       }
     }
     void load();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#6d28d9" />
+        <ActivityIndicator
+          size="large"
+          color="#6d28d9"
+          accessibilityLabel="読み込み中"
+        />
       </SafeAreaView>
     );
   }
@@ -100,16 +106,22 @@ export default function HomeScreen() {
         <Text style={styles.heading}>今日の進捗</Text>
 
         {/* プライマリCTA */}
-        <TouchableOpacity
-          style={styles.ctaButton}
-          activeOpacity={0.85}
+        <Pressable
+          style={({ pressed }) => [
+            styles.ctaButton,
+            pressed && styles.ctaButtonPressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="プレイを記録する"
           onPress={() => {
-            console.log("[HomeScreen] CTA tapped — /play screen not yet implemented");
+            if (__DEV__) {
+              console.log("[HomeScreen] CTA tapped — /play screen not yet implemented");
+            }
             Alert.alert("準備中", "プレイ記録画面は近日公開予定です");
           }}
         >
           <Text style={styles.ctaText}>🎮　プレイを記録する</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* 今日のサマリー */}
         <View style={styles.statsRow}>
@@ -183,6 +195,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
+  },
+  ctaButtonPressed: {
+    opacity: 0.85,
   },
   ctaText: {
     color: "#ffffff",

@@ -8,7 +8,7 @@ if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
   );
 }
 
-type StreakResponse = {
+export type StreakResponse = {
   streak: number;
   playedToday: boolean;
 };
@@ -19,11 +19,11 @@ type Category = {
   visible: boolean;
 };
 
-type CategoriesResponse = {
+export type CategoriesResponse = {
   categories: Category[];
 };
 
-type DailyResultResponse = {
+export type DailyResultResponse = {
   dailyResult: {
     status: string;
   };
@@ -37,15 +37,14 @@ type DailyResultResponse = {
 async function get<T>(path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
-    });
+    res = await fetch(`${BASE_URL}${path}`);
   } catch (cause) {
     throw new Error(`Network error: ${path}`, { cause });
   }
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${path}`);
   }
+  // TODO: add runtime validation with zod (LIF-31)
   return res.json() as Promise<T>;
 }
 
