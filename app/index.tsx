@@ -14,14 +14,17 @@ import { fetchCategories, fetchDailyResult, fetchStreak } from "../src/api/clien
 import { getTodayKey } from "../src/lib/date";
 import { aggregateDailyStats } from "../src/lib/aggregate";
 import type { HomeData } from "../src/types/home";
+import { useAuth } from "../src/context/auth";
 
 export default function HomeScreen() {
+  const { token, isLoading: authLoading, signOut } = useAuth();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
+    if (authLoading || !token) return;
     isMounted.current = true;
 
     async function load() {
@@ -70,9 +73,9 @@ export default function HomeScreen() {
     return () => {
       isMounted.current = false;
     };
-  }, []);
+  }, [authLoading, token]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator
@@ -151,6 +154,21 @@ export default function HomeScreen() {
             </Text>
           </View>
         )}
+
+        {/* ログアウト */}
+        <Pressable
+          style={({ pressed }) => [styles.signOutButton, pressed && styles.buttonPressed]}
+          onPress={() =>
+            Alert.alert("ログアウト", "ログアウトしますか？", [
+              { text: "キャンセル", style: "cancel" },
+              { text: "ログアウト", style: "destructive", onPress: signOut },
+            ])
+          }
+          accessibilityRole="button"
+          accessibilityLabel="ログアウト"
+        >
+          <Text style={styles.signOutText}>ログアウト</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -259,5 +277,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9ca3af",
     textAlign: "center",
+  },
+  signOutButton: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  signOutText: {
+    fontSize: 14,
+    color: "#9ca3af",
+  },
+  buttonPressed: {
+    opacity: 0.6,
   },
 });

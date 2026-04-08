@@ -1,8 +1,4 @@
-type CategoryResult = {
-  categoryId: string;
-  playCount: number;
-  xpEarned: number;
-};
+import type { CategoryResult } from "../types/api";
 
 export function aggregateDailyStats(categoryResults: CategoryResult[]): {
   totalPlays: number;
