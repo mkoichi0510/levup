@@ -9,19 +9,30 @@ import {
   Text,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { StreakCounter } from "../src/components/StreakCounter";
 import { fetchCategories, fetchDailyResult, fetchStreak } from "../src/api/client";
 import { getTodayKey } from "../src/lib/date";
 import { aggregateDailyStats } from "../src/lib/aggregate";
 import type { HomeData } from "../src/types/home";
+import { useAuth } from "../src/context/auth";
 
 export default function HomeScreen() {
+  const { token, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
+    if (!authLoading && !token) {
+      router.replace("/signin");
+    }
+  }, [token, authLoading]);
+
+  useEffect(() => {
+    if (authLoading || !token) return;
     isMounted.current = true;
 
     async function load() {
@@ -70,9 +81,9 @@ export default function HomeScreen() {
     return () => {
       isMounted.current = false;
     };
-  }, []);
+  }, [authLoading, token]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator

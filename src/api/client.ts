@@ -53,8 +53,8 @@ async function get<T>(path: string): Promise<T> {
     throw new Error(`Network error: ${path}`, { cause });
   }
   if (res.status === 401) {
-    // TODO: ログイン画面実装後に router.replace("/signin") へリダイレクト。
-    // その際は auth.tsx の signOut() と連動させてトークンを破棄すること。
+    // TODO: 401 時に signOut() + /signin リダイレクトを自動実行する（LIF-36）
+    // client.ts は React Context 外のためイベントバス等の仕組みが必要
     console.warn("[api/client] 401 Unauthorized");
     throw new Error("Unauthorized");
   }
