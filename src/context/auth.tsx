@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import * as SecureStore from "expo-secure-store";
 import { JWT_KEY } from "../constants/auth";
 
@@ -16,26 +23,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     SecureStore.getItemAsync(JWT_KEY)
-      .then((stored) => setToken(stored))
-      .finally(() => setIsLoading(false));
+      .then((stored) => {
+        if (isMounted) setToken(stored);
+      })
+      .catch((e) => {
+        console.error("[auth] SecureStore read failed:", e);
+        if (isMounted) setToken(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  async function signIn(newToken: string) {
+  const signIn = useCallback(async (newToken: string) => {
     await SecureStore.setItemAsync(JWT_KEY, newToken);
     setToken(newToken);
-  }
+  }, []);
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     await SecureStore.deleteItemAsync(JWT_KEY);
     setToken(null);
-  }
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ token, isLoading, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ token, isLoading, signIn, signOut }),
+    [token, isLoading, signIn, signOut]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {

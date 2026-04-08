@@ -25,22 +25,39 @@ describe("exchangeGitHubCode", () => {
     expect(token).toBe("jwt-token-abc");
   });
 
-  it("HTTP エラー時に GitHub auth failed をスロー", async () => {
+  it("codeVerifier がある場合はボディに含める", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ token: "jwt-token-xyz" }),
+    } as Response);
+
+    await exchangeGitHubCode("code", "levup://", "verifier-abc");
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({ code: "code", redirectUri: "levup://", codeVerifier: "verifier-abc" }),
+      })
+    );
+  });
+
+  it("HTTP エラー時に API error をスロー", async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 400,
     } as Response);
 
     await expect(exchangeGitHubCode("bad-code", "levup://")).rejects.toThrow(
-      "GitHub auth failed: 400"
+      "API error: 400 /auth/github"
     );
   });
 
-  it("ネットワークエラー時にエラーをスロー", async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error("Network error"));
+  it("ネットワークエラー時に Network error をスロー", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Failed to fetch"));
 
     await expect(exchangeGitHubCode("code", "levup://")).rejects.toThrow(
-      "Network error"
+      "Network error: /auth/github"
     );
   });
 });

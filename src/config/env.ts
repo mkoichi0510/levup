@@ -10,3 +10,9 @@ if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
 
 export const githubClientId =
   process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID ?? "";
+
+if (!process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID) {
+  console.warn(
+    "[config/env] EXPO_PUBLIC_GITHUB_CLIENT_ID is not set. GitHub OAuth will fail."
+  );
+}

@@ -47,9 +47,12 @@ export default function SignInScreen() {
     exchangeGitHubCode(code, REDIRECT_URI, request?.codeVerifier)
       .then((token) => signIn(token))
       .then(() => router.replace("/"))
-      .catch(() => setAuthError("サインインに失敗しました。もう一度お試しください。"))
+      .catch((e) => {
+        console.error("[signin] GitHub auth failed:", e);
+        setAuthError("サインインに失敗しました。もう一度お試しください。");
+      })
       .finally(() => setIsExchanging(false));
-  }, [response]);
+  }, [response, signIn, router, request]);
 
   const isLoading = !request || isExchanging;
 
