@@ -18,7 +18,10 @@ export async function exchangeGitHubCode(
   if (!res.ok) {
     throw new Error(`API error: ${res.status} /auth/github`);
   }
-  const data = (await res.json()) as { token: string };
+  const data = (await res.json()) as { token?: string };
+  if (!data?.token) {
+    throw new Error("token missing in response: /auth/github");
+  }
   return data.token;
 }
 
@@ -36,6 +39,9 @@ export async function exchangeGoogleIdToken(idToken: string): Promise<string> {
   if (!res.ok) {
     throw new Error(`API error: ${res.status} /auth/google`);
   }
-  const data = (await res.json()) as { token: string };
+  const data = (await res.json()) as { token?: string };
+  if (!data?.token) {
+    throw new Error("token missing in response: /auth/google");
+  }
   return data.token;
 }

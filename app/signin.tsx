@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -14,13 +14,8 @@ import { useRouter } from "expo-router";
 import { githubClientId, googleClientId } from "../src/config/env";
 import { exchangeGitHubCode, exchangeGoogleIdToken } from "../src/api/auth";
 import { useAuth } from "../src/context/auth";
-import { useEffect } from "react";
 
 WebBrowser.maybeCompleteAuthSession();
-
-GoogleSignin.configure({
-  iosClientId: googleClientId,
-});
 
 const GITHUB_REDIRECT_URI = makeRedirectUri({ scheme: "levup" });
 
@@ -33,6 +28,13 @@ export default function SignInScreen() {
   const router = useRouter();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isExchanging, setIsExchanging] = useState(false);
+  const processedCodeRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      iosClientId: googleClientId,
+    });
+  }, []);
 
   const [githubRequest, githubResponse, promptGitHub] = useAuthRequest(
     {
@@ -47,6 +49,8 @@ export default function SignInScreen() {
     if (githubResponse?.type !== "success") return;
     const code = githubResponse.params.code;
     if (!code) return;
+    if (processedCodeRef.current === code) return;
+    processedCodeRef.current = code;
 
     setIsExchanging(true);
     setAuthError(null);
@@ -56,6 +60,7 @@ export default function SignInScreen() {
       .catch((e) => {
         console.error("[signin] GitHub auth failed:", e);
         setAuthError("サインインに失敗しました。もう一度お試しください。");
+        processedCodeRef.current = null;
       })
       .finally(() => setIsExchanging(false));
   }, [githubResponse, signIn, router, githubRequest]);

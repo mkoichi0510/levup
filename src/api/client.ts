@@ -1,32 +1,13 @@
 import * as SecureStore from "expo-secure-store";
 import { apiBaseUrl } from "../config/env";
 import { JWT_KEY } from "../constants/auth";
+import type {
+  CategoriesResponse,
+  DailyResultResponse,
+  StreakResponse,
+} from "../types/api";
 
-export type StreakResponse = {
-  streak: number;
-  playedToday: boolean;
-};
-
-type Category = {
-  id: string;
-  name: string;
-  visible: boolean;
-};
-
-export type CategoriesResponse = {
-  categories: Category[];
-};
-
-export type DailyResultResponse = {
-  dailyResult: {
-    status: string;
-  };
-  categoryResults: {
-    categoryId: string;
-    playCount: number;
-    xpEarned: number;
-  }[];
-};
+export type { CategoriesResponse, DailyResultResponse, StreakResponse };
 
 // NOTE: AuthContext はコンポーネント外で参照できないため、
 // client.ts は SecureStore を直接読む設計としている。
@@ -53,7 +34,7 @@ async function get<T>(path: string): Promise<T> {
     throw new Error(`Network error: ${path}`, { cause });
   }
   if (res.status === 401) {
-    // TODO: 401 時に signOut() + /signin リダイレクトを自動実行する（LIF-36）
+    // TODO: 401 時に signOut() + /signin リダイレクトを自動実行する（LIF-37）
     // client.ts は React Context 外のためイベントバス等の仕組みが必要
     console.warn("[api/client] 401 Unauthorized");
     throw new Error("Unauthorized");

@@ -60,6 +60,18 @@ describe("exchangeGitHubCode", () => {
       "Network error: /auth/github"
     );
   });
+
+  it("レスポンスに token フィールドがない場合に token missing エラーをスロー", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ userId: "user-1" }),
+    } as Response);
+
+    await expect(exchangeGitHubCode("code", "levup://")).rejects.toThrow(
+      "token missing in response: /auth/github"
+    );
+  });
 });
 
 describe("exchangeGoogleIdToken", () => {
@@ -103,6 +115,18 @@ describe("exchangeGoogleIdToken", () => {
 
     await expect(exchangeGoogleIdToken("token")).rejects.toThrow(
       "Network error: /auth/google"
+    );
+  });
+
+  it("レスポンスに token フィールドがない場合に token missing エラーをスロー", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ userId: "user-2" }),
+    } as Response);
+
+    await expect(exchangeGoogleIdToken("id-token")).rejects.toThrow(
+      "token missing in response: /auth/google"
     );
   });
 });

@@ -16,7 +16,7 @@ function RootLayoutNav() {
     } else if (token && inSignIn) {
       router.replace("/");
     }
-  }, [token, isLoading, segments]);
+  }, [token, isLoading, segments, router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

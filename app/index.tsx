@@ -9,7 +9,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { StreakCounter } from "../src/components/StreakCounter";
 import { fetchCategories, fetchDailyResult, fetchStreak } from "../src/api/client";
 import { getTodayKey } from "../src/lib/date";
@@ -19,17 +18,10 @@ import { useAuth } from "../src/context/auth";
 
 export default function HomeScreen() {
   const { token, isLoading: authLoading, signOut } = useAuth();
-  const router = useRouter();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
-
-  useEffect(() => {
-    if (!authLoading && !token) {
-      router.replace("/signin");
-    }
-  }, [token, authLoading]);
 
   useEffect(() => {
     if (authLoading || !token) return;
