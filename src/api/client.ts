@@ -1,6 +1,5 @@
+import * as SecureStore from "expo-secure-store";
 import { apiBaseUrl } from "../config/env";
-
-const BASE_URL = apiBaseUrl;
 
 export type StreakResponse = {
   streak: number;
@@ -28,12 +27,27 @@ export type DailyResultResponse = {
   }[];
 };
 
+async function getToken(): Promise<string | null> {
+  return SecureStore.getItemAsync("jwt");
+}
+
 async function get<T>(path: string): Promise<T> {
+  const token = await getToken();
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`);
+    res = await fetch(`${apiBaseUrl}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
   } catch (cause) {
     throw new Error(`Network error: ${path}`, { cause });
+  }
+  if (res.status === 401) {
+    // TODO: LIF-XX ログイン画面実装後にリダイレクト
+    console.warn("[api/client] 401 Unauthorized");
+    throw new Error("Unauthorized");
   }
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${path}`);
