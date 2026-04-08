@@ -10,6 +10,10 @@ describe("api/client", () => {
     mockGetItemAsync.mockResolvedValue(null);
   });
 
+  afterEach(() => {
+    (global as unknown as { fetch: unknown }).fetch = undefined;
+  });
+
   describe("fetchStreak", () => {
     it("正常レスポンスを返す", async () => {
       global.fetch = jest.fn().mockResolvedValue({
@@ -120,7 +124,7 @@ describe("api/client", () => {
 
       await fetchStreak();
       const calledWith = (fetch as jest.Mock).mock.calls[0][1];
-      expect(calledWith.headers).not.toHaveProperty("Authorization");
+      expect(calledWith.headers).toEqual({});
     });
 
     it("401 レスポンス → Unauthorized エラーをスロー", async () => {
@@ -131,6 +135,19 @@ describe("api/client", () => {
       } as Response);
 
       await expect(fetchStreak()).rejects.toThrow("Unauthorized");
+    });
+
+    it("SecureStore 読み取り失敗時 → ヘッダーなしで fetch を続行する", async () => {
+      mockGetItemAsync.mockRejectedValue(new Error("SecureStore error"));
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ streak: 0, playedToday: false }),
+      } as Response);
+
+      await expect(fetchStreak()).resolves.toBeDefined();
+      const calledWith = (fetch as jest.Mock).mock.calls[0][1];
+      expect(calledWith.headers).toEqual({});
     });
   });
 });
