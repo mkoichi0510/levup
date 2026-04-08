@@ -21,3 +21,21 @@ export async function exchangeGitHubCode(
   const data = (await res.json()) as { token: string };
   return data.token;
 }
+
+export async function exchangeGoogleIdToken(idToken: string): Promise<string> {
+  let res: Response;
+  try {
+    res = await fetch(`${apiBaseUrl}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+  } catch (cause) {
+    throw new Error("Network error: /auth/google", { cause });
+  }
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} /auth/google`);
+  }
+  const data = (await res.json()) as { token: string };
+  return data.token;
+}

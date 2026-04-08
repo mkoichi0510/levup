@@ -37,7 +37,13 @@
       }
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.447142590055-urrjphplog3rae5j787math3m99u335v"
+        }
+      ]
     ]
   }
 }

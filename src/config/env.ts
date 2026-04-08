@@ -16,3 +16,12 @@ if (!process.env.EXPO_PUBLIC_GITHUB_CLIENT_ID) {
     "[config/env] EXPO_PUBLIC_GITHUB_CLIENT_ID is not set. GitHub OAuth will fail."
   );
 }
+
+export const googleClientId =
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+
+if (!process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID) {
+  console.warn(
+    "[config/env] EXPO_PUBLIC_GOOGLE_CLIENT_ID is not set. Google OAuth will fail."
+  );
+}

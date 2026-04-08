@@ -1,4 +1,4 @@
-import { exchangeGitHubCode } from "../auth";
+import { exchangeGitHubCode, exchangeGoogleIdToken } from "../auth";
 
 describe("exchangeGitHubCode", () => {
   beforeEach(() => {
@@ -58,6 +58,51 @@ describe("exchangeGitHubCode", () => {
 
     await expect(exchangeGitHubCode("code", "levup://")).rejects.toThrow(
       "Network error: /auth/github"
+    );
+  });
+});
+
+describe("exchangeGoogleIdToken", () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it("POST /auth/google に idToken を送信しトークンを返す", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ token: "google-jwt-token", userId: "user-2" }),
+    } as Response);
+
+    const token = await exchangeGoogleIdToken("google-id-token-xyz");
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/auth/google"),
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ idToken: "google-id-token-xyz" }),
+      })
+    );
+    expect(token).toBe("google-jwt-token");
+  });
+
+  it("HTTP エラー時に API error をスロー", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+    } as Response);
+
+    await expect(exchangeGoogleIdToken("invalid-token")).rejects.toThrow(
+      "API error: 401 /auth/google"
+    );
+  });
+
+  it("ネットワークエラー時に Network error をスロー", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Failed to fetch"));
+
+    await expect(exchangeGoogleIdToken("token")).rejects.toThrow(
+      "Network error: /auth/google"
     );
   });
 });

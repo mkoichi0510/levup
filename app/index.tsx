@@ -18,7 +18,7 @@ import type { HomeData } from "../src/types/home";
 import { useAuth } from "../src/context/auth";
 
 export default function HomeScreen() {
-  const { token, isLoading: authLoading } = useAuth();
+  const { token, isLoading: authLoading, signOut } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +162,21 @@ export default function HomeScreen() {
             </Text>
           </View>
         )}
+
+        {/* ログアウト */}
+        <Pressable
+          style={({ pressed }) => [styles.signOutButton, pressed && styles.buttonPressed]}
+          onPress={() =>
+            Alert.alert("ログアウト", "ログアウトしますか？", [
+              { text: "キャンセル", style: "cancel" },
+              { text: "ログアウト", style: "destructive", onPress: signOut },
+            ])
+          }
+          accessibilityRole="button"
+          accessibilityLabel="ログアウト"
+        >
+          <Text style={styles.signOutText}>ログアウト</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -270,5 +285,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9ca3af",
     textAlign: "center",
+  },
+  signOutButton: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  signOutText: {
+    fontSize: 14,
+    color: "#9ca3af",
+  },
+  buttonPressed: {
+    opacity: 0.6,
   },
 });

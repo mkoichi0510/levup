@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,14 +9,20 @@ import {
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
-import { githubClientId } from "../src/config/env";
-import { exchangeGitHubCode } from "../src/api/auth";
+import { githubClientId, googleClientId } from "../src/config/env";
+import { exchangeGitHubCode, exchangeGoogleIdToken } from "../src/api/auth";
 import { useAuth } from "../src/context/auth";
+import { useEffect } from "react";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const REDIRECT_URI = makeRedirectUri({ scheme: "levup" });
+GoogleSignin.configure({
+  iosClientId: googleClientId,
+});
+
+const GITHUB_REDIRECT_URI = makeRedirectUri({ scheme: "levup" });
 
 const GITHUB_DISCOVERY = {
   authorizationEndpoint: "https://github.com/login/oauth/authorize",
@@ -28,23 +34,23 @@ export default function SignInScreen() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isExchanging, setIsExchanging] = useState(false);
 
-  const [request, response, promptAsync] = useAuthRequest(
+  const [githubRequest, githubResponse, promptGitHub] = useAuthRequest(
     {
       clientId: githubClientId,
       scopes: ["user:email"],
-      redirectUri: REDIRECT_URI,
+      redirectUri: GITHUB_REDIRECT_URI,
     },
     GITHUB_DISCOVERY
   );
 
   useEffect(() => {
-    if (response?.type !== "success") return;
-    const code = response.params.code;
+    if (githubResponse?.type !== "success") return;
+    const code = githubResponse.params.code;
     if (!code) return;
 
     setIsExchanging(true);
     setAuthError(null);
-    exchangeGitHubCode(code, REDIRECT_URI, request?.codeVerifier)
+    exchangeGitHubCode(code, GITHUB_REDIRECT_URI, githubRequest?.codeVerifier)
       .then((token) => signIn(token))
       .then(() => router.replace("/"))
       .catch((e) => {
@@ -52,9 +58,29 @@ export default function SignInScreen() {
         setAuthError("サインインに失敗しました。もう一度お試しください。");
       })
       .finally(() => setIsExchanging(false));
-  }, [response, signIn, router, request]);
+  }, [githubResponse, signIn, router, githubRequest]);
 
-  const isLoading = !request || isExchanging;
+  async function handleGoogleSignIn() {
+    setAuthError(null);
+    setIsExchanging(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const { data } = await GoogleSignin.signIn();
+      if (!data?.idToken) {
+        throw new Error("ID token not returned");
+      }
+      const token = await exchangeGoogleIdToken(data.idToken);
+      await signIn(token);
+      router.replace("/");
+    } catch (e) {
+      console.error("[signin] Google auth failed:", e);
+      setAuthError("サインインに失敗しました。もう一度お試しください。");
+    } finally {
+      setIsExchanging(false);
+    }
+  }
+
+  const isLoading = !githubRequest || isExchanging;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,7 +98,7 @@ export default function SignInScreen() {
           ]}
           onPress={() => {
             setAuthError(null);
-            promptAsync();
+            promptGitHub();
           }}
           disabled={isLoading}
           accessibilityRole="button"
@@ -82,6 +108,25 @@ export default function SignInScreen() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.buttonText}>GitHub でサインイン</Text>
+          )}
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonGoogle,
+            pressed && styles.buttonPressed,
+            isExchanging && styles.buttonDisabled,
+          ]}
+          onPress={handleGoogleSignIn}
+          disabled={isExchanging}
+          accessibilityRole="button"
+          accessibilityLabel="Googleでサインイン"
+        >
+          {isExchanging ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>Google でサインイン</Text>
           )}
         </Pressable>
       </View>
@@ -124,6 +169,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+  },
+  buttonGoogle: {
+    backgroundColor: "#4285F4",
   },
   buttonPressed: {
     opacity: 0.85,
