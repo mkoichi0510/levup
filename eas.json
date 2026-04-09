@@ -14,7 +14,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://your-levup-api.example.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://levup-api.vercel.app"
       }
     }
   },
