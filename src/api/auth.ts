@@ -11,6 +11,7 @@ export async function exchangeGitHubCode(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, redirectUri, ...(codeVerifier ? { codeVerifier } : {}) }),
+      signal: AbortSignal.timeout(15000),
     });
   } catch (cause) {
     throw new Error("Network error: /auth/github", { cause });
@@ -32,6 +33,7 @@ export async function exchangeGoogleIdToken(idToken: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken }),
+      signal: AbortSignal.timeout(15000),
     });
   } catch (cause) {
     throw new Error("Network error: /auth/google", { cause });

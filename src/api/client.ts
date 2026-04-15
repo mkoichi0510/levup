@@ -29,6 +29,7 @@ async function get<T>(path: string): Promise<T> {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      signal: AbortSignal.timeout(10000),
     });
   } catch (cause) {
     throw new Error(`Network error: ${path}`, { cause });
