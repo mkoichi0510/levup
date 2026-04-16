@@ -21,18 +21,28 @@ async function getToken(): Promise<string | null> {
   }
 }
 
+/** AbortSignal.timeout はHermesで動作しない場合がある。AbortController + setTimeout を使う */
+function makeTimeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  return { signal: controller.signal, clear: () => clearTimeout(id) };
+}
+
 async function get<T>(path: string): Promise<T> {
   const token = await getToken();
+  const { signal, clear } = makeTimeoutSignal(10000);
   let res: Response;
   try {
     res = await fetch(`${apiBaseUrl}${path}`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      signal: AbortSignal.timeout(10000),
+      signal,
     });
   } catch (cause) {
     throw new Error(`Network error: ${path}`, { cause });
+  } finally {
+    clear();
   }
   if (res.status === 401) {
     // TODO: 401 時に signOut() + /signin リダイレクトを自動実行する（LIF-37）
